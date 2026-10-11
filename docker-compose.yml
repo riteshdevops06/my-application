@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ngo-tracker-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ngo_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./ngo-donation-tracker/backend
+      dockerfile: Dockerfile
+    container_name: ngo-tracker-backend
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/ngo_tracker?sslmode=disable
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRY_HOURS: 24
+      ENVIRONMENT: development
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./ngo-donation-tracker/backend:/app
+    command: go run cmd/api/main.go
+
+  frontend:
+    build:
+      context: ./ngo-donation-tracker/frontend
+      dockerfile: Dockerfile
+    container_name: ngo-tracker-frontend
+    environment:
+      VITE_API_URL: http://localhost:8080/api/v1
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./ngo-donation-tracker/frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
