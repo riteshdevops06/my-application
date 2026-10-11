@@ -206,12 +206,17 @@ type Donation struct {
 	DonorID          uuid.UUID  `json:"donor_id" db:"donor_id"`
 	Amount           float64    `json:"amount" db:"amount" validate:"required,gt=0"`
 	Currency         string     `json:"currency" db:"currency"`
+	Status           string     `json:"status" db:"status"` // pending, completed, failed, refunded, cancelled
 	PaymentMethod    *string    `json:"payment_method,omitempty" db:"payment_method"`
 	PaymentReference *string    `json:"payment_reference,omitempty" db:"payment_reference"`
-	PaymentStatus    string     `json:"payment_status" db:"payment_status"`
+	PaymentStatus    string     `json:"payment_status" db:"payment_status"` // For compatibility
 	TransactionID    *string    `json:"transaction_id,omitempty" db:"transaction_id"`
-	IsAnonymous      bool       `json:"is_anonymous" db:"is_anonymous"`
+	Anonymous        bool       `json:"anonymous" db:"anonymous"`
+	IsAnonymous      bool       `json:"is_anonymous" db:"is_anonymous"` // For compatibility
 	Message          *string    `json:"message,omitempty" db:"message"`
+	ReceiptEmail     *string    `json:"receipt_email,omitempty" db:"receipt_email"`
+	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
 	DonatedAt        time.Time  `json:"donated_at" db:"donated_at"`
 	CompletedAt      *time.Time `json:"completed_at,omitempty" db:"completed_at"`
 	
@@ -419,4 +424,12 @@ type TokenPair struct {
 type AuthResponse struct {
 	User   User      `json:"user"`
 	Tokens TokenPair `json:"tokens"`
+}
+
+// DonationWithCampaign represents donation with campaign details
+type DonationWithCampaign struct {
+	*Donation
+	CampaignTitle       string `json:"campaign_title"`
+	CampaignDescription string `json:"campaign_description"`
+	NGOName            string `json:"ngo_name"`
 }

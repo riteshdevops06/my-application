@@ -1,8 +1,8 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { NotificationProvider } from './context/NotificationContext'
 
-// Layout components (will create these next)
+// Layout components
 import PublicLayout from './layouts/PublicLayout'
 import DonorLayout from './layouts/DonorLayout'
 import NGOLayout from './layouts/NGOLayout'
@@ -135,55 +135,52 @@ function AppRoutes() {
 
       {/* Donor protected routes */}
       <Route
+        path="/donor"
         element={
-          <DonorLayout>
-            <ProtectedRoute allowedRoles={['donor']}>
-              <Outlet />
-            </ProtectedRoute>
-          </DonorLayout>
+          <ProtectedRoute allowedRoles={['donor']}>
+            <DonorLayout />
+          </ProtectedRoute>
         }
       >
-        <Route path="/donor/dashboard" element={<DonorDashboard />} />
-        <Route path="/donor/donations" element={<DonorDonations />} />
-        <Route path="/donor/profile" element={<DonorProfile />} />
+        <Route path="dashboard" element={<DonorDashboard />} />
+        <Route path="donations" element={<DonorDonations />} />
+        <Route path="profile" element={<DonorProfile />} />
       </Route>
 
       {/* NGO Admin protected routes */}
       <Route
+        path="/ngo"
         element={
-          <NGOLayout>
-            <ProtectedRoute allowedRoles={['ngo_admin']}>
-              <Outlet />
-            </ProtectedRoute>
-          </NGOLayout>
+          <ProtectedRoute allowedRoles={['ngo_admin']}>
+            <NGOLayout />
+          </ProtectedRoute>
         }
       >
-        <Route path="/ngo/dashboard" element={<NGODashboard />} />
-        <Route path="/ngo/campaigns" element={<NGOCampaigns />} />
-        <Route path="/ngo/campaigns/create" element={<NGOCampaignCreate />} />
-        <Route path="/ngo/campaigns/:id/edit" element={<NGOCampaignEdit />} />
-        <Route path="/ngo/campaigns/:id/milestones" element={<NGOMilestones />} />
-        <Route path="/ngo/campaigns/:id/expenses" element={<NGOExpenses />} />
-        <Route path="/ngo/profile" element={<NGOProfile />} />
-        <Route path="/ngo/verification" element={<NGOVerification />} />
+        <Route path="dashboard" element={<NGODashboard />} />
+        <Route path="campaigns" element={<NGOCampaigns />} />
+        <Route path="campaigns/create" element={<NGOCampaignCreate />} />
+        <Route path="campaigns/:id/edit" element={<NGOCampaignEdit />} />
+        <Route path="campaigns/:id/milestones" element={<NGOMilestones />} />
+        <Route path="campaigns/:id/expenses" element={<NGOExpenses />} />
+        <Route path="profile" element={<NGOProfile />} />
+        <Route path="verification" element={<NGOVerification />} />
       </Route>
 
       {/* Platform Admin protected routes */}
       <Route
+        path="/admin"
         element={
-          <PlatformAdminLayout>
-            <ProtectedRoute allowedRoles={['platform_admin']}>
-              <Outlet />
-            </ProtectedRoute>
-          </PlatformAdminLayout>
+          <ProtectedRoute allowedRoles={['platform_admin']}>
+            <PlatformAdminLayout />
+          </ProtectedRoute>
         }
       >
-        <Route path="/admin/dashboard" element={<PlatformAdminDashboard />} />
-        <Route path="/admin/ngos" element={<PlatformAdminNGOs />} />
-        <Route path="/admin/campaigns" element={<PlatformAdminCampaigns />} />
-        <Route path="/admin/milestones" element={<PlatformAdminMilestones />} />
-        <Route path="/admin/reports" element={<PlatformAdminReports />} />
-        <Route path="/admin/settings" element={<PlatformAdminSettings />} />
+        <Route path="dashboard" element={<PlatformAdminDashboard />} />
+        <Route path="ngos" element={<PlatformAdminNGOs />} />
+        <Route path="campaigns" element={<PlatformAdminCampaigns />} />
+        <Route path="milestones" element={<PlatformAdminMilestones />} />
+        <Route path="reports" element={<PlatformAdminReports />} />
+        <Route path="settings" element={<PlatformAdminSettings />} />
       </Route>
 
       {/* Redirect root to login */}

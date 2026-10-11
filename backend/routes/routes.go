@@ -127,6 +127,21 @@ func Setup(db *sql.DB, cfg *config.Config) *mux.Router {
 	admin.HandleFunc("/settings", handlers.AdminGetSettings(db)).Methods("GET")
 	admin.HandleFunc("/settings", handlers.AdminUpdateSettings(db)).Methods("PUT")
 
+	// File upload routes (protected)
+	fileHandler := handlers.NewFileHandler()
+	
+	// File upload endpoints
+	files := protected.PathPrefix("/files").Subrouter()
+	files.HandleFunc("/upload", fileHandler.UploadFile).Methods("POST")
+	files.HandleFunc("/upload/multiple", fileHandler.UploadMultipleFiles).Methods("POST")
+	files.HandleFunc("/validate-image", fileHandler.ValidateImageFile).Methods("POST")
+	files.HandleFunc("/progress/{upload_id}", fileHandler.GetUploadProgress).Methods("GET")
+	
+	// File serving and management
+	files.HandleFunc("/{type}/{entity_type}/{filename}", fileHandler.ServeFile).Methods("GET")
+	files.HandleFunc("/{type}/{entity_type}/{filename}", fileHandler.DeleteFile).Methods("DELETE")
+	files.HandleFunc("/{type}/{entity_type}/{filename}/info", fileHandler.GetFileInfo).Methods("GET")
+
 	// 404 handler
 	router.NotFoundHandler = http.HandlerFunc(handlers.NotFound)
 

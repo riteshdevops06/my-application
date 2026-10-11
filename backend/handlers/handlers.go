@@ -26,7 +26,8 @@ func NotFound(w http.ResponseWriter, r *http.Request) {
 func Login(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 	// Create repositories and services
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, cfg)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, cfg)
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.Login
@@ -35,7 +36,8 @@ func Login(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 func Register(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 	// Create repositories and services
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, cfg)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, cfg)
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.Register
@@ -44,7 +46,8 @@ func Register(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 func RefreshToken(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 	// Create repositories and services
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, cfg)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, cfg)
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.RefreshToken
@@ -53,7 +56,8 @@ func RefreshToken(db *sql.DB, cfg *config.Config) http.HandlerFunc {
 func ForgotPassword(db *sql.DB) http.HandlerFunc {
 	// Create repositories and services with default config
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, &config.Config{})
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, &config.Config{})
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.ForgotPassword
@@ -62,7 +66,8 @@ func ForgotPassword(db *sql.DB) http.HandlerFunc {
 func ResetPassword(db *sql.DB) http.HandlerFunc {
 	// Create repositories and services with default config
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, &config.Config{})
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, &config.Config{})
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.ResetPassword
@@ -71,7 +76,8 @@ func ResetPassword(db *sql.DB) http.HandlerFunc {
 func GetCurrentUser(db *sql.DB) http.HandlerFunc {
 	// Create repositories and services with default config
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, &config.Config{})
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, &config.Config{})
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.GetCurrentUser
@@ -80,7 +86,8 @@ func GetCurrentUser(db *sql.DB) http.HandlerFunc {
 func UpdateProfile(db *sql.DB) http.HandlerFunc {
 	// Create repositories and services with default config
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, &config.Config{})
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, &config.Config{})
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.UpdateProfile
@@ -89,7 +96,8 @@ func UpdateProfile(db *sql.DB) http.HandlerFunc {
 func ChangePassword(db *sql.DB) http.HandlerFunc {
 	// Create repositories and services with default config
 	userRepo := repositories.NewUserRepository(db)
-	authService := services.NewAuthService(userRepo, &config.Config{})
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	authService := services.NewAuthService(userRepo, ngoRepo, &config.Config{})
 	authHandlers := NewAuthHandlers(authService)
 	
 	return authHandlers.ChangePassword
@@ -97,21 +105,36 @@ func ChangePassword(db *sql.DB) http.HandlerFunc {
 
 // Campaign handlers
 func ListCampaigns(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "List campaigns not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.ListPublicCampaigns
 }
 
 func GetCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Get campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.GetPublicCampaign
 }
 
 func GetCampaignMilestones(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Get campaign milestones not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.GetCampaignMilestones
 }
 
 // Donor handlers
@@ -159,39 +182,69 @@ func UpdateNGOProfile(db *sql.DB) http.HandlerFunc {
 }
 
 func ListNGOCampaigns(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "List NGO campaigns not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.GetNGOCampaigns
 }
 
 func CreateCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Create campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.CreateCampaign
 }
 
 func GetNGOCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Get NGO campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.GetCampaign
 }
 
 func UpdateCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Update campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.UpdateCampaign
 }
 
 func DeleteCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Delete campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.DeleteCampaign
 }
 
 func PublishCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Publish campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.PublishCampaign
 }
 
 // Milestone handlers
@@ -307,21 +360,36 @@ func AdminRejectNGO(db *sql.DB) http.HandlerFunc {
 }
 
 func AdminListCampaigns(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Admin list campaigns not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.AdminListCampaigns
 }
 
 func AdminGetCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Admin get campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.GetCampaign
 }
 
 func AdminSuspendCampaign(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		utils.WriteError(w, http.StatusNotImplemented, "Admin suspend campaign not implemented yet")
-	}
+	// Create repositories and services
+	userRepo := repositories.NewUserRepository(db)
+	ngoRepo := repositories.NewNGORepositoryEnhanced(db)
+	campaignRepo := repositories.NewCampaignRepository(db)
+	campaignService := services.NewCampaignService(campaignRepo, ngoRepo, userRepo)
+	campaignHandlers := NewCampaignHandlers(campaignService)
+	
+	return campaignHandlers.AdminSuspendCampaign
 }
 
 func AdminListMilestones(db *sql.DB) http.HandlerFunc {

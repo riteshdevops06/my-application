@@ -46,14 +46,36 @@ type NGORepositoryInterface interface {
 
 // CampaignRepositoryInterface defines the contract for campaign repository
 type CampaignRepositoryInterface interface {
+	// Basic CRUD operations
 	Create(ctx context.Context, campaign *models.Campaign) error
 	GetByID(ctx context.Context, id uuid.UUID) (*models.Campaign, error)
 	Update(ctx context.Context, campaign *models.Campaign) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	
+	// Campaign listing and filtering
 	List(ctx context.Context, params models.Pagination, filters CampaignFilters) ([]*models.Campaign, int64, error)
 	ListByNGO(ctx context.Context, ngoID uuid.UUID, params models.Pagination) ([]*models.Campaign, int64, error)
+	
+	// Campaign management
 	UpdateStatus(ctx context.Context, id uuid.UUID, status string) error
+	UpdateRaisedAmountInterface(ctx context.Context, id uuid.UUID, amount float64) error
+	
+	// Enhanced methods (available in enhanced repository)
+	CreateCampaign(ctx context.Context, ngoID uuid.UUID, campaignCreate *models.CampaignCreate) (*models.Campaign, error)
+	GetCampaignByID(ctx context.Context, id uuid.UUID) (*models.Campaign, error)
+	UpdateCampaign(ctx context.Context, id uuid.UUID, campaignUpdate *models.CampaignUpdate) (*models.Campaign, error)
+	DeleteCampaign(ctx context.Context, id uuid.UUID) error
+	ListCampaigns(ctx context.Context, params models.Pagination, filters CampaignFilters) ([]*models.Campaign, int64, error)
+	ListCampaignsByNGO(ctx context.Context, ngoID uuid.UUID, params models.Pagination) ([]*models.Campaign, int64, error)
+	UpdateCampaignStatus(ctx context.Context, id uuid.UUID, status string) error
 	UpdateRaisedAmount(ctx context.Context, id uuid.UUID, amount float64) error
+	IncrementRaisedAmount(ctx context.Context, id uuid.UUID, amount float64) error
+	GetActiveCampaigns(ctx context.Context, params models.Pagination) ([]*models.Campaign, int64, error)
+	GetFeaturedCampaigns(ctx context.Context, params models.Pagination) ([]*models.Campaign, int64, error)
+	SetFeaturedStatus(ctx context.Context, id uuid.UUID, isFeatured bool) error
+	SearchCampaigns(ctx context.Context, searchTerm string, params models.Pagination) ([]*models.Campaign, int64, error)
+	GetCampaignsByCategory(ctx context.Context, category string, params models.Pagination) ([]*models.Campaign, int64, error)
+	GetCampaignStats(ctx context.Context) (*CampaignStats, error)
 }
 
 // DonationRepositoryInterface defines the contract for donation repository
@@ -95,21 +117,6 @@ type VerificationRequestRepositoryInterface interface {
 	GetByNGOID(ctx context.Context, ngoID uuid.UUID) (*models.VerificationRequest, error)
 	List(ctx context.Context, params models.Pagination, status string) ([]*models.VerificationRequest, int64, error)
 	UpdateStatus(ctx context.Context, id uuid.UUID, status, adminNotes string, reviewedBy uuid.UUID) error
-}
-
-// Filter structs for repository interfaces
-
-// CampaignFilters represents filters for campaign queries
-type CampaignFilters struct {
-	Status       string
-	Category     string
-	NGOID        *uuid.UUID
-	SearchTerm   string
-	IsFeatured   *bool
-	MinAmount    *float64
-	MaxAmount    *float64
-	StartAfter   *time.Time
-	EndBefore    *time.Time
 }
 
 // DonationFilters represents filters for donation queries

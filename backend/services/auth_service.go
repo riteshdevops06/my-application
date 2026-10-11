@@ -17,21 +17,26 @@ import (
 // AuthService handles authentication business logic
 type AuthService struct {
 	userRepo repositories.UserRepositoryInterface
+	ngoRepo  repositories.NGORepositoryInterface
 	config   *config.Config
 }
 
 // NewAuthService creates a new authentication service
-func NewAuthService(userRepo repositories.UserRepositoryInterface, config *config.Config) *AuthService {
+func NewAuthService(userRepo repositories.UserRepositoryInterface, ngoRepo repositories.NGORepositoryInterface, config *config.Config) *AuthService {
 	return &AuthService{
 		userRepo: userRepo,
+		ngoRepo:  ngoRepo,
 		config:   config,
 	}
 }
 
-// Register creates a new user account
+// Register creates a new user account with enhanced validation
 func (s *AuthService) Register(ctx context.Context, req *models.UserCreate) (*models.AuthResponse, error) {
-	// Validate input
-	if err := s.validateRegistrationInput(req); err != nil {
+	// Create auth utils for validation
+	authUtils := NewAuthUtils(s.userRepo)
+
+	// Validate input with comprehensive checks
+	if err := authUtils.ValidateRegistrationData(ctx, req); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
@@ -234,8 +239,11 @@ func (s *AuthService) generateTokens(user *models.User) (*models.TokenPair, erro
 	// Get NGO ID if user is NGO admin
 	var ngoID *uuid.UUID
 	if user.Role == "ngo_admin" {
-		// Note: In a real implementation, you'd fetch the NGO ID from the database
-		// For now, we'll leave it nil and handle it when we implement NGO repository
+		ngo, err := s.ngoRepo.GetByUserID(context.Background(), user.ID)
+		if err == nil && ngo != nil {
+			ngoID = &ngo.ID
+		}
+		// If NGO doesn't exist yet, that's okay - they might be creating it
 	}
 
 	// Generate access token
@@ -322,4 +330,185 @@ func (s *AuthService) validatePasswordChange(req *models.PasswordChange) error {
 		return errors.New("new password must be different from current password")
 	}
 	return nil
+}
+// CheckEmailAvailability checks if an email is available for registration
+func (s *AuthService) CheckEmailAvailability(ctx context.Context, email string) (bool, error) {
+	authUtils := NewAuthUtils(s.userRepo)
+	return authUtils.CheckEmailAvailability(ctx, email)
+}
+
+// ValidateToken validates a JWT token and returns user information
+func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (*models.User, error) {
+	// Parse and validate token
+	claims, err := utils.ParseToken(tokenString, s.config.JWTSecret)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	// Get user to ensure they still exist and are active
+	user, err := s.userRepo.GetUserByID(ctx, claims.UserID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	if !user.IsActive {
+		return nil, fmt.Errorf("account is deactivated")
+	}
+
+	// Remove password hash from response
+	user.PasswordHash = ""
+	return user, nil
+}
+
+// GetEnhancedUserProfile returns user profile with NGO information if applicable
+func (s *AuthService) GetEnhancedUserProfile(ctx context.Context, userID uuid.UUID) (map[string]interface{}, error) {
+	// Get user
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	// Remove password hash
+	user.PasswordHash = ""
+
+	response := map[string]interface{}{
+		"user": user,
+	}
+
+	// If user is NGO admin, try to get NGO profile
+	if user.Role == "ngo_admin" {
+		ngo, err := s.ngoRepo.GetByUserID(ctx, userID)
+		if err == nil && ngo != nil {
+			response["ngo_profile"] = ngo
+			response["has_ngo_profile"] = true
+		} else {
+			response["has_ngo_profile"] = false
+			response["setup_required"] = true
+		}
+	}
+
+	return response, nil
+}
+
+// RequestPasswordReset initiates a password reset request
+func (s *AuthService) RequestPasswordReset(ctx context.Context, email string) error {
+	// Validate email
+	authUtils := NewAuthUtils(s.userRepo)
+	if err := authUtils.ValidateEmail(email); err != nil {
+		return fmt.Errorf("invalid email: %w", err)
+	}
+
+	// Check if user exists (don't reveal if email exists for security)
+	user, err := s.userRepo.GetUserByEmail(ctx, email)
+	if err != nil {
+		// Don't reveal whether the email exists or not
+		return nil
+	}
+
+	if user == nil {
+		// Don't reveal whether the email exists or not
+		return nil
+	}
+
+	// TODO: Generate reset token and send email
+	// For now, just return success
+	return nil
+}
+
+// ResetPassword completes a password reset using a token
+func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// Validate new password
+	authUtils := NewAuthUtils(s.userRepo)
+	if err := authUtils.ValidatePassword(newPassword); err != nil {
+		return fmt.Errorf("password validation failed: %w", err)
+	}
+
+	// Validate token (placeholder implementation)
+	valid, userID, err := authUtils.ValidatePasswordResetToken(token)
+	if err != nil || !valid {
+		return fmt.Errorf("invalid or expired reset token")
+	}
+
+	// Hash new password
+	passwordHash, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password
+	err = s.userRepo.ChangePassword(ctx, userID, passwordHash)
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return fmt.Errorf("user not found")
+		}
+		return fmt.Errorf("failed to reset password: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateProfileWithValidation updates user profile with enhanced validation
+func (s *AuthService) UpdateProfileWithValidation(ctx context.Context, userID uuid.UUID, req *models.UserUpdate) (*models.User, error) {
+	// Validate input
+	authUtils := NewAuthUtils(s.userRepo)
+	
+	if req.Name != "" {
+		if err := authUtils.ValidateName(req.Name); err != nil {
+			return nil, fmt.Errorf("name validation failed: %w", err)
+		}
+	}
+
+	if req.Phone != "" {
+		if err := authUtils.ValidatePhone(req.Phone); err != nil {
+			return nil, fmt.Errorf("phone validation failed: %w", err)
+		}
+	}
+
+	// Update user
+	user, err := s.userRepo.UpdateUser(ctx, userID, req)
+	if err != nil {
+		if errors.Is(err, repositories.ErrUserNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to update profile: %w", err)
+	}
+
+	// Remove password hash from response
+	user.PasswordHash = ""
+	return user, nil
+}
+
+// GetUserStats returns authentication-related statistics
+func (s *AuthService) GetUserStats(ctx context.Context) (map[string]interface{}, error) {
+	// Get user stats from repository
+	if enhancedUserRepo, ok := s.userRepo.(*repositories.UserRepository); ok {
+		stats, err := enhancedUserRepo.GetUserStats(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user stats: %w", err)
+		}
+
+		response := map[string]interface{}{
+			"user_stats": stats,
+		}
+
+		// Get NGO stats if available
+		if enhancedNGORepo, ok := s.ngoRepo.(*repositories.NGORepositoryEnhanced); ok {
+			ngoStats, err := enhancedNGORepo.GetNGOStats(ctx)
+			if err == nil {
+				response["ngo_stats"] = ngoStats
+			}
+		}
+
+		return response, nil
+	}
+
+	return map[string]interface{}{
+		"message": "Stats not available with current repository implementation",
+	}, nil
 }

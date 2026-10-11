@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -115,3 +116,31 @@ var ErrInvalidInt = &ParseError{"invalid integer"}
 type ParseError struct{ msg string }
 
 func (e *ParseError) Error() string { return e.msg }
+// ParseToken parses and validates a JWT token
+func ParseToken(tokenString, secret string) (*models.Claims, error) {
+	// Parse token
+	token, err := jwt.ParseWithClaims(tokenString, &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Validate signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse token: %w", err)
+	}
+
+	// Extract claims
+	claims, ok := token.Claims.(*models.Claims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	// Check if token is expired
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("token is expired")
+	}
+
+	return claims, nil
+}
