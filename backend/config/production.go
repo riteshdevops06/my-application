@@ -416,3 +416,11 @@ func (pc *ProductionConfig) GetRedisURL() string {
 		pc.Redis.Database,
 	)
 }
+// LoadConfig loads basic configuration (placeholder for base config loading)
+func LoadConfig() (*Config, error) {
+	return &Config{
+		DatabaseURL: getEnvString("DATABASE_URL", "postgres://localhost/ngo_tracker?sslmode=disable"),
+		JWTSecret:   getEnvString("JWT_SECRET", generateSecretKey()),
+		Port:        getEnvString("PORT", "8080"),
+	}, nil
+}

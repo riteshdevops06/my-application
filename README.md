@@ -1,88 +1,174 @@
 # NGO Donation Transparency Tracker
 
-A full-stack platform for transparent donation tracking with three user roles:
-- **Donors** - Browse campaigns, make donations, track giving history
-- **NGO Admins** - Manage campaigns, milestones, expenses, verification
-- **Platform Admins** - Oversee NGOs, campaigns, platform settings, reports
+A comprehensive platform for transparent NGO donation tracking with milestone-based progress monitoring, real-time updates, and advanced analytics.
 
----
+## 🚀 Features
 
-## 🏗️ Tech Stack
+### Core Features
+- **Multi-role Authentication**: Donors, NGO Admins, Platform Admins
+- **Campaign Management**: Create, manage, and track donation campaigns
+- **Milestone Tracking**: Progress-based milestone system with evidence uploads
+- **Expense Management**: Transparent expense tracking and approval workflow
+- **Real-time Updates**: Live donation feeds and campaign progress
+- **File Uploads**: Secure document and image management
+- **Advanced Analytics**: Charts, reports, and performance metrics
 
-### Frontend
-- **React 19** + **Vite 8** - Modern React with fast build tool
-- **React Router 7** - Client-side routing with role-based protection
-- **TailwindCSS 4** - Utility-first CSS framework
-- **Chart.js** - Data visualization for dashboards
-- **Axios** - HTTP client with interceptors
+### Security Features
+- **JWT Authentication** with refresh tokens
+- **Role-based Access Control** (RBAC)
+- **Rate Limiting** and DDoS protection
+- **Input Validation** and sanitization
+- **HTTPS/TLS** encryption
+- **Security Headers** (CSP, HSTS, etc.)
+- **File Upload Security** with virus scanning support
 
-### Backend
-- **Go 1.23** - High-performance backend
-- **Gorilla Mux** - HTTP router
-- **PostgreSQL** - Primary database
-- **lib/pq** - PostgreSQL driver
-- **golang-jwt/jwt** - JWT authentication
-- **bcrypt** - Password hashing
-- **zerolog** - Structured logging
+### Production Features
+- **Docker Containerization** for easy deployment
+- **Horizontal Scaling** support
+- **Database Migrations** and backups
+- **Monitoring & Alerting** with Prometheus/Grafana
+- **Centralized Logging** with ELK stack
+- **Health Checks** and graceful shutdowns
+- **Performance Optimization** and caching
 
-### DevOps
-- **Docker & Docker Compose** - Containerization
-- **Nginx** - Reverse proxy for frontend
-
----
-
-## 📁 Project Structure
+## 🏗️ Architecture
 
 ```
-ngo-donation-tracker/
-├── backend/                 # Go backend
-│   ├── cmd/api/            # Main entry point
-│   ├── config/             # Configuration management
-│   ├── database/           # Database connection & migrations
-│   ├── handlers/           # HTTP handlers
-│   ├── middleware/         # Auth, logging, CORS, recovery
-│   ├── models/             # Data models (to be created)
-│   ├── repositories/       # Data access layer (to be created)
-│   ├── routes/             # Route definitions
-│   ├── services/           # Business logic (to be created)
-│   ├── utils/              # Helpers (JWT, password, pagination)
-│   └── uploads/            # File upload handling
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── context/        # React context (Auth, Notifications)
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── layouts/        # Layout components (Public, Donor, NGO, Admin)
-│   │   ├── pages/          # Page components by role
-│   │   ├── routes/         # Route configuration
-│   │   ├── services/       # API service layer
-│   │   ├── utils/          # Utility functions
-│   │   ├── App.jsx         # Main app with routing
-│   │   └── main.jsx        # Entry point
-│   └── public/             # Static assets
-├── database/
-│   ├── migrations/         # SQL migration files
-│   └── seeds/              # Seed data scripts
-├── docs/                   # Documentation
-├── docker-compose.yml      # Local development stack
-└── README.md               # This file
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React SPA     │    │   Go Backend    │    │   PostgreSQL    │
+│   (Frontend)    │◄──►│     (API)       │◄──►│   (Database)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐             │
+         │              │     Redis       │             │
+         └──────────────►│    (Cache)      │◄────────────┘
+                        └─────────────────┘
+                                 │
+         ┌─────────────────────────────────────────────┐
+         │              Monitoring Stack                │
+         │  ┌─────────────┐  ┌─────────────┐          │
+         │  │ Prometheus  │  │   Grafana   │          │
+         │  └─────────────┘  └─────────────┘          │
+         └─────────────────────────────────────────────┘
 ```
 
----
+## 📋 Prerequisites
+
+- **Docker** 20.10+ and **Docker Compose** 2.0+
+- **Node.js** 18+ (for local development)
+- **Go** 1.21+ (for local development)
+- **PostgreSQL** 15+ (for local development)
+- **Redis** 7+ (for caching)
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- **Docker & Docker Compose** (recommended)
-- OR: **Go 1.23+**, **Node.js 20+**, **PostgreSQL 16+**
-
-### Option 1: Docker Compose (Recommended)
+### 1. Clone the Repository
 
 ```bash
-# Clone and navigate
+git clone <repository-url>
 cd ngo-donation-tracker
+```
 
-# Start all services
+### 2. Environment Setup
+
+```bash
+# Copy environment template
+cp .env.production.template .env.production
+
+# Edit the configuration
+nano .env.production
+```
+
+**Important**: Update all passwords, secrets, and API keys in the environment file.
+
+### 3. SSL Certificates (Production)
+
+For HTTPS in production, add SSL certificates:
+
+```bash
+mkdir -p nginx/ssl
+# Copy your SSL certificate files
+cp /path/to/your/cert.pem nginx/ssl/cert.pem
+cp /path/to/your/key.pem nginx/ssl/key.pem
+```
+
+### 4. Deploy
+
+```bash
+# Make deployment script executable (Linux/Mac)
+chmod +x deploy.sh
+
+# Deploy the application
+./deploy.sh deploy
+```
+
+### 5. Access the Application
+
+- **Frontend**: http://localhost (or https://localhost with SSL)
+- **API**: http://localhost:8080
+- **Monitoring**: http://localhost:3001 (Grafana)
+- **Metrics**: http://localhost:9091 (Prometheus)
+
+## 🛠️ Development Setup
+
+### Backend Development
+
+```bash
+cd backend
+
+# Install dependencies
+go mod download
+
+# Set up development database
+createdb ngo_tracker_dev
+
+# Run migrations (when available)
+# go run ./cmd/migrate up
+
+# Start development server
+go run ./cmd/api
+```
+
+### Frontend Development
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+## 🐳 Docker Commands
+
+### Production Deployment
+
+```bash
+# Full deployment
+./deploy.sh deploy
+
+# Update deployment
+./deploy.sh update
+
+# Show status
+./deploy.sh status
+
+# View logs
+./deploy.sh logs [service-name]
+
+# Stop services
+./deploy.sh stop
+
+# Restart services
+./deploy.sh restart
+```
+
+### Development with Docker
+
+```bash
+# Start development environment
 docker-compose up -d
 
 # View logs
@@ -90,171 +176,345 @@ docker-compose logs -f
 
 # Stop services
 docker-compose down
+
+# Rebuild services
+docker-compose build --no-cache
 ```
 
-Services will be available at:
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:8080/api/v1
-- **Database**: localhost:5432
+## 🔧 Configuration
 
-### Option 2: Manual Setup
+### Environment Variables
 
-#### Backend
+Key configuration options in `.env.production`:
+
+#### Database Configuration
+```env
+DB_HOST=postgres
+DB_PASSWORD=your_secure_password
+DB_NAME=ngo_tracker
+```
+
+#### Security Configuration
+```env
+JWT_SECRET=your_jwt_secret_32_characters_min
+ENCRYPTION_KEY=your_encryption_key_32_chars
+BCRYPT_COST=12
+```
+
+#### Email Configuration
+```env
+SMTP_HOST=your_smtp_server
+SMTP_USER=your_smtp_username
+SMTP_PASSWORD=your_smtp_password
+FROM_ADDRESS=noreply@yourdomain.com
+```
+
+#### File Upload Configuration
+```env
+UPLOAD_MAX_FILE_SIZE=10485760
+USE_S3=false
+S3_BUCKET=your_s3_bucket
+```
+
+### Rate Limiting
+
+Configure rate limits for different endpoints:
+
+```env
+RATE_LIMIT_GLOBAL=1000      # 1000 requests per hour
+RATE_LIMIT_AUTH=10          # 10 auth requests per minute  
+RATE_LIMIT_API=100          # 100 API requests per minute
+RATE_LIMIT_UPLOAD=5         # 5 upload requests per minute
+```
+
+## 📊 Monitoring & Observability
+
+### Prometheus Metrics
+
+The application exposes metrics at `/metrics`:
+
+- HTTP request duration and count
+- Database connection pool stats
+- Cache hit/miss rates
+- Custom business metrics (donations, campaigns, etc.)
+
+### Grafana Dashboards
+
+Access Grafana at `http://localhost:3001`:
+
+- **Application Dashboard**: Request rates, response times, errors
+- **Infrastructure Dashboard**: CPU, memory, disk usage
+- **Business Dashboard**: Donations, campaigns, user activity
+
+### Logging
+
+Structured JSON logging with configurable levels:
+
+- **Console**: Development logging
+- **File**: Production logging with rotation
+- **Elasticsearch**: Centralized logging (with ELK stack)
+
+### Health Checks
+
+Health check endpoints:
+
+- **Application**: `GET /health`
+- **Database**: `GET /health/db`
+- **Cache**: `GET /health/cache`
+
+## 🔒 Security
+
+### Security Features
+
+1. **Authentication & Authorization**
+   - JWT tokens with configurable expiration
+   - Role-based access control
+   - Password strength requirements
+
+2. **Input Validation**
+   - Server-side validation for all inputs
+   - SQL injection prevention
+   - XSS protection
+
+3. **Transport Security**
+   - HTTPS/TLS encryption
+   - Security headers (HSTS, CSP, etc.)
+   - Secure cookie settings
+
+4. **Rate Limiting**
+   - Per-IP rate limiting
+   - Endpoint-specific limits
+   - Redis-backed distributed limiting
+
+5. **File Upload Security**
+   - File type validation
+   - Size limits
+   - Virus scanning support
+   - Secure file storage
+
+### Security Configuration
+
+```nginx
+# Example security headers in nginx.conf
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Strict-Transport-Security "max-age=31536000" always;
+```
+
+## 🧪 Testing
+
+### Backend Testing
+
 ```bash
-cd ngo-donation-tracker/backend
+cd backend
 
-# Copy env file
-cp .env.example .env
+# Run unit tests
+go test ./...
 
-# Edit .env with your database credentials
-# DATABASE_URL=postgres://user:pass@localhost:5432/ngo_tracker?sslmode=disable
+# Run tests with coverage
+go test -cover ./...
 
-# Install dependencies
-go mod tidy
+# Run integration tests
+go test -tags=integration ./tests/...
 
-# Run database migrations (requires running PostgreSQL)
-go run cmd/api/main.go
+# Load testing
+go test -bench=. ./tests/...
 ```
 
-#### Frontend
+### Frontend Testing
+
 ```bash
-cd ngo-donation-tracker/frontend
+cd frontend
 
-# Install dependencies
-npm install
+# Run unit tests
+npm test
 
-# Start dev server
-npm run dev
+# Run tests with coverage
+npm run test:coverage
+
+# Run e2e tests
+npm run test:e2e
 ```
 
-#### Database Seeding
+## 📈 Performance Optimization
+
+### Backend Optimizations
+
+- **Database Connection Pooling**: Configurable pool sizes
+- **Redis Caching**: Session and data caching
+- **Compression**: Gzip compression for responses
+- **Static Asset Optimization**: CDN-ready file serving
+
+### Frontend Optimizations
+
+- **Code Splitting**: Lazy loading of routes and components
+- **Bundle Optimization**: Tree shaking and minification
+- **Image Optimization**: Automatic image compression
+- **Caching**: Browser and CDN caching strategies
+
+### Database Optimizations
+
+- **Indexing**: Strategic database indexes
+- **Query Optimization**: Efficient queries with proper joins
+- **Connection Pooling**: Optimized connection management
+- **Read Replicas**: Read scaling support
+
+## 🔄 Backup & Recovery
+
+### Automated Backups
+
 ```bash
-cd database/seeds
-go run seed.go
+# Create backup
+./deploy.sh backup
+
+# Scheduled backups (add to crontab)
+0 2 * * * /path/to/ngo-donation-tracker/deploy.sh backup
 ```
 
----
+### Manual Backup
 
-## 🔐 Default Test Accounts
-
-After seeding the database:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Platform Admin | admin@ngotracker.org | password123 |
-| Donor | donor@example.com | password123 |
-| NGO Admin | ngo@example.com | password123 |
-
----
-
-## 📡 API Endpoints
-
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/auth/login` | User login |
-| POST | `/api/v1/auth/register` | User registration |
-| POST | `/api/v1/auth/refresh` | Refresh access token |
-| POST | `/api/v1/auth/forgot-password` | Request password reset |
-| POST | `/api/v1/auth/reset-password` | Reset password |
-
-### Public Campaigns
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/campaigns` | List campaigns (with filters) |
-| GET | `/api/v1/campaigns/{id}` | Get campaign details |
-| GET | `/api/v1/campaigns/{id}/milestones` | Get campaign milestones |
-
-### Donor (Requires `donor` role)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/donor/dashboard` | Donor dashboard stats |
-| GET | `/api/v1/donor/donations` | List donor's donations |
-| GET | `/api/v1/donor/donations/{id}` | Get donation details |
-| POST | `/api/v1/donor/donations` | Create new donation |
-
-### NGO Admin (Requires `ngo_admin` role)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/ngo/dashboard` | NGO dashboard stats |
-| GET | `/api/v1/ngo/profile` | Get NGO profile |
-| PUT | `/api/v1/ngo/profile` | Update NGO profile |
-| GET | `/api/v1/ngo/campaigns` | List NGO's campaigns |
-| POST | `/api/v1/ngo/campaigns` | Create campaign |
-| GET | `/api/v1/ngo/campaigns/{id}` | Get campaign |
-| PUT | `/api/v1/ngo/campaigns/{id}` | Update campaign |
-| DELETE | `/api/v1/ngo/campaigns/{id}` | Delete campaign |
-| POST | `/api/v1/ngo/campaigns/{id}/publish` | Publish campaign |
-| GET | `/api/v1/ngo/campaigns/{campaign_id}/milestones` | List milestones |
-| POST | `/api/v1/ngo/campaigns/{campaign_id}/milestones` | Create milestone |
-| GET | `/api/v1/ngo/campaigns/{campaign_id}/expenses` | List expenses |
-| POST | `/api/v1/ngo/campaigns/{campaign_id}/expenses` | Create expense |
-| GET | `/api/v1/ngo/verification` | Get verification status |
-| POST | `/api/v1/ngo/verification` | Submit verification |
-
-### Platform Admin (Requires `platform_admin` role)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/admin/dashboard` | Platform dashboard |
-| GET | `/api/v1/admin/ngos` | List all NGOs |
-| GET | `/api/v1/admin/ngos/{id}` | Get NGO details |
-| POST | `/api/v1/admin/ngos/{id}/verify` | Verify NGO |
-| POST | `/api/v1/admin/ngos/{id}/reject` | Reject NGO |
-| GET | `/api/v1/admin/campaigns` | List all campaigns |
-| GET | `/api/v1/admin/milestones` | List all milestones |
-| POST | `/api/v1/admin/milestones/{id}/approve` | Approve milestone |
-| POST | `/api/v1/admin/milestones/{id}/reject` | Reject milestone |
-| GET | `/api/v1/admin/reports/donations` | Donation reports |
-| GET | `/api/v1/admin/reports/ngos` | NGO reports |
-| GET | `/api/v1/admin/reports/campaigns` | Campaign reports |
-| GET | `/api/v1/admin/settings` | Get platform settings |
-| PUT | `/api/v1/admin/settings` | Update platform settings |
-
----
-
-## 🔧 Development
-
-### Running Tests
 ```bash
-# Backend tests
-cd backend && go test ./...
+# Database backup
+docker-compose exec postgres pg_dump -U ngo_user ngo_tracker > backup.sql
 
-# Frontend tests
-cd frontend && npm test
+# File uploads backup
+tar -czf uploads_backup.tar.gz uploads/
 ```
 
-### Code Quality
+### Recovery
+
 ```bash
-# Backend linting
-cd backend && go vet ./...
+# Restore database
+docker-compose exec -T postgres psql -U ngo_user ngo_tracker < backup.sql
 
-# Frontend linting
-cd frontend && npm run lint
+# Restore files
+tar -xzf uploads_backup.tar.gz
 ```
 
-### Database Migrations
-Migrations run automatically on backend startup. To create new migrations, add SQL files to `database/migrations/`.
+## 🚀 Deployment Options
 
----
+### Docker Compose (Recommended)
 
-## 🌐 Environment Variables
+- **Development**: `docker-compose.yml`
+- **Production**: `docker-compose.prod.yml`
+- **Monitoring**: Use `--profile monitoring`
+- **Logging**: Use `--profile logging`
 
-### Backend (.env)
-| Variable | Description | Default |
-|----------|-------------|---------|
-| PORT | Server port | 8080 |
-| DATABASE_URL | PostgreSQL connection string | Required |
-| JWT_SECRET | JWT signing secret | Required |
-| JWT_EXPIRY_HOURS | Token expiry in hours | 24 |
-| ENVIRONMENT | Environment (development/production) | development |
+### Kubernetes (Advanced)
 
-### Frontend
-| Variable | Description | Default |
-|----------|-------------|---------|
-| VITE_API_URL | Backend API base URL | http://localhost:8080/api/v1 |
+For Kubernetes deployment, see the `k8s/` directory for manifests.
 
----
+### Cloud Deployment
+
+#### AWS
+- Use ECS or EKS for container orchestration
+- RDS for PostgreSQL
+- ElastiCache for Redis
+- S3 for file storage
+
+#### Google Cloud
+- Use GKE for Kubernetes
+- Cloud SQL for PostgreSQL
+- Cloud Memorystore for Redis
+- Cloud Storage for files
+
+#### Azure
+- Use AKS for Kubernetes
+- Azure Database for PostgreSQL
+- Azure Cache for Redis
+- Azure Blob Storage for files
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Run the test suite
+6. Submit a pull request
+
+### Development Guidelines
+
+- Follow Go and React best practices
+- Write comprehensive tests
+- Document new features
+- Follow the existing code style
+- Update documentation
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### Documentation
+
+- **API Documentation**: Available at `/api/docs` when running
+- **Architecture Guide**: See `docs/architecture.md`
+- **Deployment Guide**: See `docs/deployment.md`
+
+### Getting Help
+
+1. Check the documentation
+2. Search existing issues
+3. Create a new issue with:
+   - Environment details
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Relevant logs
+
+### Common Issues
+
+#### Database Connection Issues
+```bash
+# Check database status
+docker-compose exec postgres pg_isready -U ngo_user
+
+# View database logs
+docker-compose logs postgres
+```
+
+#### SSL/HTTPS Issues
+```bash
+# Verify certificate files
+ls -la nginx/ssl/
+
+# Check nginx configuration
+docker-compose exec nginx nginx -t
+```
+
+#### Performance Issues
+```bash
+# Check resource usage
+docker stats
+
+# View application metrics
+curl http://localhost:9090/metrics
+```
+
+## 🗺️ Roadmap
+
+### Phase 1 ✅
+- Basic authentication and authorization
+- Campaign and donation management
+- File upload system
+- Basic monitoring
+
+### Phase 2 ✅
+- Advanced UI components
+- Real-time notifications
+- Search and filtering
+- Security hardening
+
+### Phase 3 (Future)
+- Mobile application
+- Payment gateway integration
+- Advanced analytics
+- Multi-language support
+- API rate limiting improvements
+- Blockchain integration for transparency
+
+---
+
+**Built with ❤️ for NGO transparency and accountability**

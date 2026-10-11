@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 // AppError represents a structured application error
@@ -311,4 +313,13 @@ func RequestIDMiddleware() gin.HandlerFunc {
 		c.Header("X-Request-ID", requestID)
 		c.Next()
 	}
+}
+// GetCurrentTimestamp returns current timestamp in ISO format
+func GetCurrentTimestamp() string {
+	return time.Now().Format(time.RFC3339)
+}
+
+// GenerateUUID generates a new UUID string
+func GenerateUUID() string {
+	return uuid.New().String()
 }

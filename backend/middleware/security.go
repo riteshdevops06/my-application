@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -256,10 +257,37 @@ func APIKeyAuth(validAPIKeys map[string]string) gin.HandlerFunc {
 
 // RequestTimeout middleware adds timeout to requests
 func RequestTimeout(timeout time.Duration) gin.HandlerFunc {
-	return gin.TimeoutWithHandler(timeout, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusRequestTimeout)
-		w.Write([]byte(`{"error":{"type":"REQUEST_TIMEOUT","message":"Request timeout"}}`))
-	}))
+	return func(c *gin.Context) {
+		// Set a timeout context
+		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		defer cancel()
+		
+		c.Request = c.Request.WithContext(ctx)
+		
+		// Channel to capture if handler completes
+		done := make(chan bool, 1)
+		
+		go func() {
+			c.Next()
+			done <- true
+		}()
+		
+		select {
+		case <-done:
+			// Handler completed within timeout
+		case <-ctx.Done():
+			// Timeout occurred
+			if ctx.Err() == context.DeadlineExceeded {
+				c.JSON(http.StatusRequestTimeout, gin.H{
+					"error": gin.H{
+						"type":    "REQUEST_TIMEOUT",
+						"message": "Request timeout",
+					},
+				})
+				c.Abort()
+			}
+		}
+	}
 }
 
 // HTTPS redirect middleware
