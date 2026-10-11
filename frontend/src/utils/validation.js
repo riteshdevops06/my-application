@@ -1,4 +1,5 @@
 // Validation utilities for frontend forms
+import React from 'react';
 
 /**
  * Validation rule functions

@@ -1,4 +1,5 @@
 // Error handling service for centralized error management
+import React from 'react';
 
 class ErrorService {
   constructor() {
